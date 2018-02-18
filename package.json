@@ -1,0 +1,32 @@
+{
+  "name": "apollo-graphql-login",
+  "private": true,
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "rimraf dist && cross-env NODE_ENV=production webpack --progress --colors",
+    "ts": "tslint -p ./tsconfig.json './src/**/*.{ts,tsx}'",
+    "ts:fix": "tslint --fix -c ./tslint.json -p ./tsconfig.json './src/**/*.{ts,tsx}'",
+    "start": "ts-node-dev src/"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@falieson/js-helpers": "^1.0.6",
+    "@types/node": "^9.4.6",
+    "cross-env": "^5.1.3",
+    "rimraf": "^2.6.2",
+    "ts-loader": "^3.5.0",
+    "ts-node-dev": "^1.0.0-pre.15",
+    "tslint": "^5.9.1",
+    "tslint-loader": "^3.5.3",
+    "typescript": "^2.7.2",
+    "webpack": "^3.11.0",
+    "webpack-node-externals": "^1.6.0"
+  },
+  "dependencies": {
+    "express": "^4.16.2"
+  }
+}

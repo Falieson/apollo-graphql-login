@@ -1,6 +1,5 @@
  // tslint:disable no-any
  import { Models } from './'
-console.log({Models})
 const {User} = Models
 
  export default {

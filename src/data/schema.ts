@@ -1,7 +1,6 @@
 import { makeExecutableSchema } from 'graphql-tools' // addMockFunctionsToSchema,
 // import mocks from './mocks'
 import resolvers from './resolvers'
-import {Models} from '../data'
 
 export let typeDefs = `
 type User {
@@ -20,8 +19,6 @@ type Mutation {
   addUser(username: String!, password: String!, firstName: String!, lastName: String!): User
 }
 `
-
-console.log({typeDefs})
 
 const schema = makeExecutableSchema({ typeDefs, resolvers })
 // addMockFunctionsToSchema({ schema, mocks })

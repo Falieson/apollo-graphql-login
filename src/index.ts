@@ -1,2 +1,1 @@
-import server from './server/'
-server.init()
+import './server'

@@ -1,3 +1,5 @@
-import server from './server'
+import express from './express'
+import mongodb from './mongodb'
 
-export default server
+mongodb.init()
+express.init()

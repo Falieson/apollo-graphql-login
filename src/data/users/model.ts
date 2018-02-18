@@ -1,12 +1,10 @@
 // tslint:disable no-any
-// import * as casual from 'casual'
-import * as bcrypt from 'bcrypt'
 import * as mongoose from 'mongoose'
 import MongooseModel from '../../utils/mongoose' 
-// import { Passport, Profile, View } from './index'
+import Passport from '../passport/model'
 
 (mongoose as any).Promise = global.Promise
-// const ObjectIdType = mongoose.Schema.Types.ObjectId
+const ObjectIdType = mongoose.Schema.Types.ObjectId
 const ObjectId = mongoose.Types.ObjectId
 
 class UserModel {
@@ -20,9 +18,8 @@ class UserModel {
     this.model = new MongooseModel({
       schema: { 
         username: String,
-        password: String,
-        firstName: String,
-        lastName: String,        
+        passportId: { type: ObjectIdType, ref: 'Passport' },
+        profileId: { type: ObjectIdType, ref: 'Profile' },
       },
       title : 'User',
     })
@@ -41,42 +38,20 @@ class UserModel {
       password: string,
     }) {
     try { 
-      const args = {
-        _id: new ObjectId(),
-        firstName,
-        lastName,
-        username,
-        password: bcrypt.hashSync(password, 10),
-      }
-      const newUser: any = await this.model.create(args)
+      const newUser: any = await this.model.create({username})
 
       if (newUser) {
-        // const {_id: userId} = newUser
+        const {_id: userId} = newUser
 
-        // const newPassport = await Passport.register({
-        //   _id: new ObjectId(),
-        //   userId,
-        //   // active: false,
-        //   username,
-        // }, password)
+        const newPassport: any = await Passport.register({
+          _id: new ObjectId(),
+          userId,
+          username,
+        }, password)
         
-        // const newProfile: any = await Profile.create({
-        //   firstName,
-        //   lastName,
-        //   userId,
-        // })
-        
-        // const newView = await View.create({
-        //   profileId: newProfile && newProfile._id,
-        //   views: 0,
-        // })
+        newUser.passportId = newPassport._id
+        await newUser.save()
 
-        // newProfile.viewId = newView && newView._id
-        // await newProfile.save()
-
-        // newUser.passportId = newPassport._id
-        // newUser.profileId = newProfile && newProfile._id
-        // await newUser.save()
         return newUser
       }
     } catch (e) { console.error('Mongoose User: ', e)}

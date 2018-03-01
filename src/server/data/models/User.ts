@@ -1,7 +1,8 @@
 // tslint:disable no-any
 import * as mongoose from 'mongoose'
-import MongooseModel from '../../utils/mongoose' 
-import Passport from '../passport/model'
+import MongooseModel from './MongooseFactory' 
+import Passport from './Passport'
+import Profile from './Profile'
 
 (mongoose as any).Promise = global.Promise
 const ObjectIdType = mongoose.Schema.Types.ObjectId
@@ -18,6 +19,7 @@ class UserModel {
     this.model = new MongooseModel({
       schema: { 
         username: String,
+        email: String,
         passportId: { type: ObjectIdType, ref: 'Passport' },
         profileId: { type: ObjectIdType, ref: 'Profile' },
       },
@@ -26,18 +28,18 @@ class UserModel {
     return this.model
   }
 
-  async register({
-      firstName,
-      lastName,
-      username,
-      password,
-    }: {
-      firstName: string,
-      lastName: string,
+  async register(ctx: any, args: { // tslint:disable-line no-any
+      email: string,
       username: string,
       password: string,
     }) {
+    const {
+      email,
+      username,
+      password,
+    }  = args
     try { 
+      // TODO: check if unique username (useername.toLowerCase() .length === 0)
       const newUser: any = await this.model.create({username})
 
       if (newUser) {
@@ -48,13 +50,22 @@ class UserModel {
           userId,
           username,
         }, password)
-        
         newUser.passportId = newPassport._id
+        // console.log({newUser, newPassport}) // newProfile, newPassport})
         await newUser.save()
+
+        const newProfile: any = await Profile.model.create({
+          emails: [{address: email, verified: false}],
+          userId,
+        })
+        newUser.profileId = newProfile._id
+        await newUser.save()
+        
+        await Passport.login(ctx, username, password)
 
         return newUser
       }
-    } catch (e) { console.error('Mongoose User: ', e)}
+    } catch (e) { console.error('Registering User: ', e)}
   }
 }
 

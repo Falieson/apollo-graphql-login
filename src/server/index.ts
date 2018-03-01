@@ -1,5 +1,5 @@
 import express from './express'
-import mongodb from './mongodb'
+import ConnectMongodb from './data/mongodb'
 
-mongodb.init()
+ConnectMongodb.init()
 express.init()

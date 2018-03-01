@@ -1,19 +1,20 @@
-import helpers from '@falieson/js-helpers'
 import * as bodyParser from 'body-parser'
 import * as events from 'events'
 import * as express from 'express'
-import * as session from 'express-session'
-// import expressPlayground from 'graphql-playground-middleware-express'
-import { graphqlExpress, graphiqlExpress } from 'graphql-server-express'
-import * as mongoose from 'mongoose'
+import { createServer } from 'http'
+import { graphql, graphiql, graphqlWs } from './middleware/apollo'
 
-import { schema } from '../data/'
-import { GRAPHQL_EXPLORE, GRAPHQL_PORT, GRAPHQL_REST } from './config'
-import passport from '../data/passport/config'
+import {
+  GRAPHQL_PORT,
+  GRAPHQL_URL_WWW,
+  GRAPHQL_URL_GRAPHIQL,
+  GRAPHQL_URL_GRAPHQL,
+  GRAPHQL_URL_WS,
+} from './config'
+import schema from './data/schema'
+import passport from './middleware/passport'
 
 const app = express()
-const mongoStore = require('connect-mongo')(session) // tslint:disable-line no-var-requires
-const {string: {webaddress}} = helpers
 const env = process.env.NODE_ENV
 
 class Loader extends events.EventEmitter {
@@ -21,57 +22,45 @@ class Loader extends events.EventEmitter {
     super()
   }
   init() {
-    const self = this
+    // const self = this
 
     app.use(bodyParser.json());
+    
     // PASSPORT INITIALIZE
-    app.use(
-      session({
-        cookie: { secure: false },
-        resave: true,
-        saveUninitialized: true,
-        secret: 'keyboard cat',
-        store: new mongoStore({ mongooseConnection: mongoose.connection })
-      })
-    );
-    app.use(passport.initialize());
-    app.use(passport.session());
+    app.use(...passport)
 
-    app.use(
-      GRAPHQL_REST,
-      graphqlExpress((req, res) => {
-        return {
-          schema,
-          rootValue: {
-            me: req.user
-          },
-          context: {req}
-        }
-      })
-    )
+
+    //  Apollo
+    app.use(...graphql)
+    if (process.env.NODE_ENV !== 'production') {
+      app.use(...graphiql)
+    }
+
 
     // GQL PLAYGROUND CONFIG
     // ISSUE: https://github.com/graphcool/graphql-playground/issues/576
     //  app.use(GRAPHQL_EXPLORE, expressPlayground({ endpoint: GRAPHQL_REST}))
-    // GQL PLAYGROUND CONFIG
-    app.use(GRAPHQL_EXPLORE, graphiqlExpress({ endpointURL: GRAPHQL_REST}))
-    
-    // APP STARTUP
-    app.listen(GRAPHQL_PORT, () => {
-      self.emit('server.loaded')
-      // tslint:disable-next-line no-console
-      console.log(`\n\n\n\n\n\n\n\n\n
-          🌐      GraphQL Server      🌐
 
-        🎮  ${webaddress({ // explorer
-        path: GRAPHQL_EXPLORE,
-        port: GRAPHQL_PORT,
-      })}
-        📡  ${webaddress({ // endpoint
-        path: GRAPHQL_REST,
-        port: GRAPHQL_PORT,
-      })}
+    // Create a http/ws listener for our express app.
+    const ws = createServer(app)
+    const listener = ws.listen(GRAPHQL_PORT, () => {
+      // tslint:disable-next-line no-console
+
+      // http://localhost:3000/
+      // http://localhost:3000/graphiql
+      // http://localhost:3000/graphql
+      // ws://localhost:3000/subscriptions
+      // 🔎    www         ${GRAPHQL_URL_WWW}
+      console.log(`
+      \n\n\n\n\n\n\n\n\n
+      🌐      Server  Online      🌐
+
+      📡    endpoint    ${GRAPHQL_URL_GRAPHQL}
+      🎮    explorer    ${GRAPHQL_URL_GRAPHIQL}
+      ➿    websocket   ${GRAPHQL_URL_WS}
       `)
+
+      graphqlWs(schema, ws)
     })
 
     if (env === 'development' || env === null) {
@@ -80,7 +69,9 @@ class Loader extends events.EventEmitter {
         console.log('Bye bye!') // tslint:disable-line no-console
         process.exit() // eslint-disable-line no-process-exit
       })
-    }      
+    }
+    
+    return listener
   }
 }
 

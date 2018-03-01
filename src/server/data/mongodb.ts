@@ -1,13 +1,11 @@
+import helpers from '@falieson/js-helpers'
 import * as mongoose from 'mongoose'
 
-import helpers from '@falieson/js-helpers'
-import { MONGODB_NAME, MONGODB_PORT, MONGODB_PROTOCOL } from './config'
+export const MONGODB_NAME = 'rtv'
+export const MONGODB_PORT = 27017
+export const MONGODB_PROTOCOL = 'mongodb'
 const handleError = helpers.errors.consoleError
 const webaddress = helpers.string.webaddress
-
-// import {Models} from '../data/'
-// const { User } = Models
-// import fixtures from './fixtures'
 
 class MongodbModel {
   async init() {
